@@ -1,0 +1,32 @@
+{
+  "name": "@near-js/tx-builder",
+  "version": "1.0.0",
+  "description": "Transaction construction library for NEAR Protocol",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "keywords": [
+    "near",
+    "near-protocol",
+    "blockchain",
+    "transaction",
+    "builder",
+    "web3"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "near-api-js": "^7.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ]
+}

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEAR Playground</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1c2333;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --accent: #6ad1a0;
+      --accent-hover: #56c08d;
+      --accent-dim: rgba(106, 209, 160, 0.12);
+      --error: #f85149;
+      --warning: #d29922;
+      --info: #58a6ff;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--bg-primary);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .header h1 span {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .header-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.15s;
+    }
+
+    .header-links a:hover {
+      color: var(--accent);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .toolbar label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .toolbar select {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 32px 8px 12px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      min-width: 280px;
+      transition: border-color 0.15s;
+    }
+
+    .toolbar select:hover { border-color: var(--accent); }
+
+    .toolbar select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--text-secondary); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: calc(100vh - 110px);
+    }
+
+    .editor-panel {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    .panel-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .editor-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .line-numbers {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 48px;
+      height: 100%;
+      padding: 16px 8px 16px 0;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+      user-select: none;
+      opacity: 0.5;
+    }
+
+    .editor {
+      width: 100%;
+      height: 100%;
+      padding: 16px 16px 16px 60px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      border: none;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .editor::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+
+    .output-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .output-tabs {
+      display: flex;
+      gap: 0;
+    }
+
+    .output-tab {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: var(--font-sans);
+      transition: color 0.15s;
+    }
+
+    .output-tab:hover { color: var(--text-primary); }
+
+    .output-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .output-content {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .output-view {
+      display: none;
+      height: 100%;
+    }
+
+    .output-view.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .output-area {
+      flex: 1;
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      overflow: auto;
+    }
+
+    .result-block { margin-bottom: 16px; }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .result-value {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .result-value.success { border-left: 3px solid var(--accent); }
+    .result-value.error { border-left: 3px solid var(--error); }
+    .result-value.info { border-left: 3px solid var(--info); }
+
+    .reference-area {
+      padding: 20px;
+      overflow: auto;
+      height: 100%;
+    }
+
+    .ref-section { margin-bottom: 24px; }
+
+    .ref-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+
+    .ref-section p, .ref-section li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .ref-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .ref-section li {
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .ref-section li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .ref-section code {
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    .ref-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--info);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .ref-link:hover { text-decoration: underline; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 32px;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      max-width: 300px;
+    }
+
+    .empty-state p strong { color: var(--text-primary); }
+
+    @media (max-width: 900px) {
+      .main {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+
+      .editor-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .toolbar {
+        flex-wrap: wrap;
+        padding: 12px 16px;
+      }
+
+      .toolbar select { min-width: 200px; }
+      .header { padding: 12px 16px; }
+      .header-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">N</div>
+      <h1>NEAR Playground <span>/ code templates</span></h1>
+    </div>
+    <nav class="header-links">
+      <a href="https://docs.near.org" target="_blank" rel="noopener">NEAR Docs</a>
+      <a href="https://docs.near.org/sdk/js/introduction" target="_blank" rel="noopener">JS SDK</a>
+      <a href="https://docs.near.org/sdk/rust/introduction" target="_blank" rel="noopener">Rust SDK</a>
+      <a href="https://github.com/near" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://nearblocks.io" target="_blank" rel="noopener">Explorer</a>
+    </nav>
+  </header>
+
+  <div class="toolbar">
+    <label for="example-select">Example:</label>
+    <select id="example-select">
+      <option value="account-lookup">Account Lookup</option>
+      <option value="view-contract">View Contract State</option>
+      <option value="ft-balance">Fungible Token Balance</option>
+      <option value="ft-transfer">Token Transfer</option>
+      <option value="nft-query">NFT Token Query</option>
+      <option value="deploy-contract">Deploy Contract</option>
+      <option value="cross-contract">Cross-Contract Call (Rust)</option>
+      <option value="batch-actions">Batch Transaction</option>
+      <option value="storage-deposit">Storage Deposit</option>
+      <option value="access-keys">Access Key Management</option>
+    </select>
+    <div class="toolbar-right">
+      <button class="btn btn-secondary" id="copy-btn">Copy Code</button>
+      <button class="btn btn-primary" id="output-btn">Show Output</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="editor-panel">
+      <div class="panel-header">
+        <span class="panel-title">Code Editor</span>
+        <span class="panel-badge" id="lang-badge">JavaScript</span>
+      </div>
+      <div class="editor-wrapper">
+        <div class="line-numbers" id="line-numbers"></div>
+        <textarea class="editor" id="code-editor" spellcheck="false" placeholder="Select an example or write your own NEAR code..."></textarea>
+      </div>
+    </div>
+
+    <div class="output-panel">
+      <div class="panel-header">
+        <div class="output-tabs">
+          <button class="output-tab active" data-tab="output" id="tab-output-btn">Output</button>
+          <button class="output-tab" data-tab="reference" id="tab-reference-btn">Reference</button>
+        </div>
+      </div>
+      <div class="output-content">
+
+        <div class="output-view active" id="view-output">
+          <div class="output-area" id="output-area"></div>
+        </div>
+
+        <div class="output-view" id="view-reference">
+          <div class="reference-area">
+            <div class="ref-section">
+              <h3>Getting Started</h3>
+              <p>This playground provides ready-to-use NEAR code templates. Copy them into your project to interact with the NEAR blockchain.</p>
+            </div>
+
+            <div class="ref-section">
+              <h3>Installation</h3>
+              <p>Install the NEAR JavaScript SDK in your project:</p>
+              <div class="result-value" style="margin-top: 8px;">npm install near-api-js</div>
+            </div>
+
+            <div class="ref-section">
+              <h3>Networks</h3>
+              <ul>
+                <li><code>mainnet</code> &mdash; Production network</li>
+                <li><code>testnet</code> &mdash; Development and testing</li>
+              </ul>
+            </div>
+
+            <div class="ref-section">
+              <h3>Key Concepts</h3>
+              <ul>
+                <li><code>Provider</code> &mdash; connects to a NEAR RPC node</li>
+                <li><code>Account</code> &mdash; represents a NEAR account</li>
+                <li><code>Contract</code> &mdash; interface for smart contract calls</li>
+                <li><code>KeyStore</code> &mdash; manages cryptographic keys</li>
+                <li><code>view</code> calls &mdash; read-only, no gas cost</li>
+                <li><code>call</code> methods &mdash; state-changing, requires gas</li>
+              </ul>
+            </div>
+
+            <div class="ref-section">
+              <h3>Common Gas Values</h3>
+              <ul>
+                <li><code>30 TGas</code> &mdash; simple function calls</li>
+                <li><code>100 TGas</code> &mdash; token transfers (ft_transfer)</li>
+                <li><code>200 TGas</code> &mdash; cross-contract calls</li>
+                <li><code>300 TGas</code> &mdash; maximum gas per transaction</li>
+              </ul>
+            </div>
+
+            <div class="ref-section">
+              <h3>Common Deposit Values</h3>
+              <ul>
+                <li><code>1 yoctoNEAR</code> &mdash; required for ft_transfer, nft_transfer</li>
+                <li><code>0.00125 NEAR</code> &mdash; typical storage deposit for FTs</li>
+                <li><code>0.1 NEAR</code> &mdash; storage deposit for DEX contracts</li>
+                <li><code>1 NEAR = 10^24 yoctoNEAR</code></li>
+              </ul>
+            </div>
+
+            <div class="ref-section">
+              <h3>Documentation</h3>
+              <ul>
+                <li><a class="ref-link" href="https://docs.near.org" target="_blank" rel="noopener">NEAR Documentation</a></li>
+                <li><a class="ref-link" href="https://docs.near.org/tools/near-api-js/quick-reference" target="_blank" rel="noopener">near-api-js Quick Reference</a></li>
+                <li><a class="ref-link" href="https://docs.near.org/concepts/protocol/account-model" target="_blank" rel="noopener">Account Model</a></li>
+                <li><a class="ref-link" href="https://docs.near.org/concepts/protocol/gas" target="_blank" rel="noopener">Gas and Fees</a></li>
+                <li><a class="ref-link" href="https://nomicon.io" target="_blank" rel="noopener">Protocol Specification (Nomicon)</a></li>
+                <li><a class="ref-link" href="https://nearblocks.io" target="_blank" rel="noopener">NEARBlocks Explorer</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ──────────────────────────────────────────────
+    // Code Examples
+    // ──────────────────────────────────────────────
+    var examples = {
+      "account-lookup": {
+        title: "Account Lookup",
+        lang: "JavaScript",
+        code: 'import { providers } from "near-api-js";\n\n// Connect to NEAR mainnet RPC\nconst provider = new providers.JsonRpcProvider({\n  url: "https://rpc.mainnet.near.org",\n});\n\nasync function lookupAccount(accountId) {\n  try {\n    // Query account state\n    const account = await provider.query({\n      request_type: "view_account",\n      finality: "final",\n      account_id: accountId,\n    });\n\n    console.log("Account:", accountId);\n    console.log("Balance:", account.amount);\n    console.log("Storage Used:", account.storage_usage, "bytes");\n    console.log("Code Hash:", account.code_hash);\n    console.log("Block Height:", account.block_height);\n\n    // Convert yoctoNEAR to NEAR (1 NEAR = 1e24 yoctoNEAR)\n    const nearBalance = (\n      BigInt(account.amount) / BigInt("1000000000000000000000000")\n    ).toString();\n    console.log("Balance (NEAR):", nearBalance);\n\n    return account;\n  } catch (error) {\n    console.error("Account not found:", error.message);\n  }\n}\n\nlookupAccount("root.near");',
+        outputLabel: "Response",
+        outputType: "success",
+        outputValue: '{\n  "amount": "19871642870302066920000000",\n  "block_hash": "FXn5Y8dUq4CFMbBKM8hpkN41z...",\n  "block_height": 141234567,\n  "code_hash": "11111111111111111111111111111111",\n  "locked": "0",\n  "storage_paid_at": 0,\n  "storage_usage": 846\n}\n\nBalance (NEAR): 19871'
+      },
+
+      "view-contract": {
+        title: "View Contract State",
+        lang: "JavaScript",
+        code: 'import { providers } from "near-api-js";\n\nconst provider = new providers.JsonRpcProvider({\n  url: "https://rpc.mainnet.near.org",\n});\n\nasync function viewContractMethod(contractId, methodName, args) {\n  args = args || {};\n  try {\n    // Encode arguments as base64\n    const argsBase64 = Buffer.from(\n      JSON.stringify(args)\n    ).toString("base64");\n\n    const result = await provider.query({\n      request_type: "call_function",\n      finality: "final",\n      account_id: contractId,\n      method_name: methodName,\n      args_base64: argsBase64,\n    });\n\n    // Decode the result from bytes\n    const decoded = JSON.parse(\n      Buffer.from(result.result).toString()\n    );\n\n    console.log("Contract:", contractId);\n    console.log("Method:", methodName);\n    console.log("Result:", JSON.stringify(decoded, null, 2));\n\n    return decoded;\n  } catch (error) {\n    console.error("View call failed:", error.message);\n  }\n}\n\n// Example: Get token metadata\nviewContractMethod("wrap.near", "ft_metadata", {});\n\n// Example: Query guest book messages\nviewContractMethod("guest-book.testnet", "get_messages", {\n  from_index: 0,\n  limit: 5,\n});',
+        outputLabel: "ft_metadata Response",
+        outputType: "success",
+        outputValue: '{\n  "spec": "ft-1.0.0",\n  "name": "Wrapped NEAR fungible token",\n  "symbol": "wNEAR",\n  "icon": "data:image/svg+xml,...",\n  "reference": null,\n  "reference_hash": null,\n  "decimals": 24\n}'
+      },
+
+      "ft-balance": {
+        title: "Fungible Token Balance",
+        lang: "JavaScript",
+        code: 'import { providers } from "near-api-js";\n\nconst provider = new providers.JsonRpcProvider({\n  url: "https://rpc.mainnet.near.org",\n});\n\nasync function getFTBalance(tokenContract, accountId) {\n  try {\n    // Get token metadata first\n    const metaResult = await provider.query({\n      request_type: "call_function",\n      finality: "final",\n      account_id: tokenContract,\n      method_name: "ft_metadata",\n      args_base64: btoa("{}"),\n    });\n\n    const metadata = JSON.parse(\n      Buffer.from(metaResult.result).toString()\n    );\n\n    // Get balance\n    const balanceResult = await provider.query({\n      request_type: "call_function",\n      finality: "final",\n      account_id: tokenContract,\n      method_name: "ft_balance_of",\n      args_base64: btoa(\n        JSON.stringify({ account_id: accountId })\n      ),\n    });\n\n    const rawBalance = JSON.parse(\n      Buffer.from(balanceResult.result).toString()\n    );\n\n    // Format with decimals\n    const decimals = metadata.decimals;\n    const divisor = BigInt(10) ** BigInt(decimals);\n    const whole = BigInt(rawBalance) / divisor;\n    const fraction = BigInt(rawBalance) % divisor;\n\n    console.log("Token:", metadata.name,\n      "(" + metadata.symbol + ")");\n    console.log("Decimals:", decimals);\n    console.log("Raw Balance:", rawBalance);\n    console.log("Formatted:", whole.toString() + "." +\n      fraction.toString().padStart(decimals, "0")\n        .slice(0, 4));\n\n    return { metadata, balance: rawBalance };\n  } catch (error) {\n    console.error("Failed to get balance:", error.message);\n  }\n}\n\n// Check wNEAR balance\ngetFTBalance("wrap.near", "root.near");\n\n// Check USDT balance\ngetFTBalance(\n  "dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near",\n  "root.near"\n);',
+        outputLabel: "Response",
+        outputType: "success",
+        outputValue: 'Token: Wrapped NEAR fungible token (wNEAR)\nDecimals: 24\nRaw Balance: "5000000000000000000000000"\nFormatted: 5.0000\n\nToken: Tether USD (USDT)\nDecimals: 6\nRaw Balance: "1500000"\nFormatted: 1.5000'
+      },
+
+      "ft-transfer": {
+        title: "Token Transfer",
+        lang: "JavaScript",
+        code: 'import { connect, keyStores, utils } from "near-api-js";\n\nasync function transferNEAR(senderId, receiverId, amountNear) {\n  // Configure connection\n  const keyStore = new keyStores.UnencryptedFileSystemKeyStore(\n    "~/.near-credentials"\n  );\n\n  const config = {\n    networkId: "mainnet",\n    keyStore,\n    nodeUrl: "https://rpc.mainnet.near.org",\n  };\n\n  const near = await connect(config);\n  const account = await near.account(senderId);\n\n  // Convert NEAR to yoctoNEAR\n  const amount = utils.format.parseNearAmount(\n    amountNear.toString()\n  );\n\n  console.log("Sending", amountNear, "NEAR to", receiverId);\n  console.log("Amount in yoctoNEAR:", amount);\n\n  const result = await account.sendMoney(receiverId, amount);\n\n  console.log("Transaction Hash:", result.transaction.hash);\n  console.log("Status:", result.status);\n\n  return result;\n}\n\nasync function transferFT(\n  senderId, tokenContract, receiverId, amount\n) {\n  const keyStore = new keyStores.UnencryptedFileSystemKeyStore(\n    "~/.near-credentials"\n  );\n\n  const config = {\n    networkId: "mainnet",\n    keyStore,\n    nodeUrl: "https://rpc.mainnet.near.org",\n  };\n\n  const near = await connect(config);\n  const account = await near.account(senderId);\n\n  // ft_transfer requires exactly 1 yoctoNEAR deposit\n  const result = await account.functionCall({\n    contractId: tokenContract,\n    methodName: "ft_transfer",\n    args: {\n      receiver_id: receiverId,\n      amount: amount,\n      memo: "Transfer via NEAR Playground",\n    },\n    gas: "100000000000000", // 100 TGas\n    attachedDeposit: "1",   // 1 yoctoNEAR (required)\n  });\n\n  console.log("FT Transfer Hash:", result.transaction.hash);\n  return result;\n}\n\n// Send NEAR\ntransferNEAR("sender.near", "receiver.near", 1.5);\n\n// Send wNEAR tokens\ntransferFT(\n  "sender.near",\n  "wrap.near",\n  "receiver.near",\n  "1500000000000000000000000"\n);',
+        outputLabel: "Response",
+        outputType: "info",
+        outputValue: 'Sending 1.5 NEAR to receiver.near\nAmount in yoctoNEAR: 1500000000000000000000000\n\nTransaction Hash: 7fDe3bK9...xYz\nStatus: { SuccessValue: "" }\n\nNote: This is a state-changing transaction.\nIt requires a funded account with valid\naccess keys in ~/.near-credentials/'
+      },
+
+      "nft-query": {
+        title: "NFT Token Query",
+        lang: "JavaScript",
+        code: 'import { providers } from "near-api-js";\n\nconst provider = new providers.JsonRpcProvider({\n  url: "https://rpc.mainnet.near.org",\n});\n\nasync function queryNFTs(contractId, accountId) {\n  try {\n    // Get NFT contract metadata\n    const metaResult = await provider.query({\n      request_type: "call_function",\n      finality: "final",\n      account_id: contractId,\n      method_name: "nft_metadata",\n      args_base64: btoa("{}"),\n    });\n\n    const metadata = JSON.parse(\n      Buffer.from(metaResult.result).toString()\n    );\n\n    console.log("Collection:", metadata.name);\n    console.log("Symbol:", metadata.symbol);\n    console.log("Spec:", metadata.spec);\n\n    // Get total supply\n    const supplyResult = await provider.query({\n      request_type: "call_function",\n      finality: "final",\n      account_id: contractId,\n      method_name: "nft_total_supply",\n      args_base64: btoa("{}"),\n    });\n\n    const totalSupply = JSON.parse(\n      Buffer.from(supplyResult.result).toString()\n    );\n    console.log("Total Supply:", totalSupply);\n\n    // Get tokens owned by account\n    const tokensResult = await provider.query({\n      request_type: "call_function",\n      finality: "final",\n      account_id: contractId,\n      method_name: "nft_tokens_for_owner",\n      args_base64: btoa(JSON.stringify({\n        account_id: accountId,\n        from_index: "0",\n        limit: 10,\n      })),\n    });\n\n    const tokens = JSON.parse(\n      Buffer.from(tokensResult.result).toString()\n    );\n\n    console.log("Tokens owned:", tokens.length);\n    tokens.forEach(function(token) {\n      console.log("  Token ID:", token.token_id);\n      console.log("  Title:", token.metadata?.title);\n      console.log("  Media:", token.metadata?.media);\n    });\n\n    return { metadata, totalSupply, tokens };\n  } catch (error) {\n    console.error("NFT query failed:", error.message);\n  }\n}\n\nqueryNFTs("x.paras.near", "collector.near");',
+        outputLabel: "Response",
+        outputType: "success",
+        outputValue: 'Collection: Paras\nSymbol: PARAS\nSpec: nft-1.0.0\nTotal Supply: "285413"\n\nTokens owned: 3\n  Token ID: 1234\n  Title: "Abstract Mountains #42"\n  Media: "bafybeig..."\n  Token ID: 5678\n  Title: "Digital Horizon #7"\n  Media: "bafybeih..."'
+      },
+
+      "deploy-contract": {
+        title: "Deploy Contract",
+        lang: "JavaScript",
+        code: 'import { connect, keyStores } from "near-api-js";\nimport { readFileSync } from "fs";\n\nasync function deployContract(accountId, wasmPath) {\n  const keyStore = new keyStores.UnencryptedFileSystemKeyStore(\n    "~/.near-credentials"\n  );\n\n  const config = {\n    networkId: "testnet",\n    keyStore,\n    nodeUrl: "https://rpc.testnet.near.org",\n  };\n\n  const near = await connect(config);\n  const account = await near.account(accountId);\n\n  // Read the compiled WASM file\n  const wasmCode = readFileSync(wasmPath);\n\n  console.log("Deploying contract to:", accountId);\n  console.log("WASM size:", wasmCode.length, "bytes");\n\n  // Deploy the contract\n  const deployResult = await account.deployContract(wasmCode);\n  console.log("Deploy TX:", deployResult.transaction.hash);\n\n  // Initialize the contract (if needed)\n  const initResult = await account.functionCall({\n    contractId: accountId,\n    methodName: "new",\n    args: { owner_id: accountId },\n    gas: "300000000000000", // 300 TGas\n  });\n\n  console.log("Init TX:", initResult.transaction.hash);\n  console.log("Contract deployed and initialized.");\n\n  return { deployResult, initResult };\n}\n\n// Deploy to testnet\ndeployContract(\n  "my-contract.testnet",\n  "./target/wasm32-unknown-unknown/release/my_contract.wasm"\n);\n\n// To compile a Rust NEAR contract:\n// cargo build --target wasm32-unknown-unknown --release\n//\n// Or use cargo-near:\n// cargo near build',
+        outputLabel: "Response",
+        outputType: "info",
+        outputValue: 'Deploying contract to: my-contract.testnet\nWASM size: 234567 bytes\n\nDeploy TX: 9aBcD3f...kLm\nInit TX: 2xYz7w...pQr\nContract deployed and initialized.\n\nNote: Deploy to testnet first for testing.\nCreate a testnet account at:\nhttps://testnet.mynearwallet.com\n\nBuild your Rust contract with:\n  cargo near build'
+      },
+
+      "cross-contract": {
+        title: "Cross-Contract Call",
+        lang: "Rust",
+        code: '// Rust smart contract: cross-contract calls\n// Demonstrates calling another contract from yours\n\nuse near_sdk::{\n    borsh::{self, BorshDeserialize, BorshSerialize},\n    env, ext_contract, log, near_bindgen,\n    json_types::U128,\n    AccountId, Balance, Gas, Promise, PromiseResult,\n};\n\nconst FT_CONTRACT: &str = "wrap.near";\nconst NO_DEPOSIT: Balance = 0;\nconst GAS_FOR_FT_CALL: Gas = Gas(50_000_000_000_000);\nconst GAS_FOR_CALLBACK: Gas = Gas(20_000_000_000_000);\n\n// Define external contract interface\n#[ext_contract(ext_ft)]\ntrait FungibleToken {\n    fn ft_balance_of(&self, account_id: AccountId) -> U128;\n    fn ft_transfer(\n        &mut self,\n        receiver_id: AccountId,\n        amount: U128,\n        memo: Option<String>,\n    );\n}\n\n// Callback interface\n#[ext_contract(ext_self)]\ntrait SelfCallback {\n    fn on_ft_balance(&self) -> U128;\n}\n\n#[near_bindgen]\n#[derive(BorshDeserialize, BorshSerialize)]\npub struct Contract {\n    owner: AccountId,\n}\n\n#[near_bindgen]\nimpl Contract {\n    #[init]\n    pub fn new(owner: AccountId) -> Self {\n        Self { owner }\n    }\n\n    // Cross-contract call to check FT balance\n    pub fn check_balance(&self) -> Promise {\n        ext_ft::ext(FT_CONTRACT.parse().unwrap())\n            .with_static_gas(GAS_FOR_FT_CALL)\n            .with_attached_deposit(NO_DEPOSIT)\n            .ft_balance_of(env::current_account_id())\n            .then(\n                ext_self::ext(env::current_account_id())\n                    .with_static_gas(GAS_FOR_CALLBACK)\n                    .on_ft_balance()\n            )\n    }\n\n    #[private]\n    pub fn on_ft_balance(&self) -> U128 {\n        match env::promise_result(0) {\n            PromiseResult::Successful(value) => {\n                let balance: U128 =\n                    serde_json::from_slice(&value).unwrap();\n                log!("FT balance: {}", balance.0);\n                balance\n            }\n            _ => {\n                log!("Failed to get balance");\n                U128(0)\n            }\n        }\n    }\n}',
+        outputLabel: "Contract Pattern",
+        outputType: "info",
+        outputValue: 'Cross-contract call flow:\n\n1. Your contract calls ext_ft::ft_balance_of()\n   on the token contract (wrap.near)\n\n2. NEAR runtime executes the call in a\n   separate receipt/block\n\n3. Result comes back to your contract via\n   the on_ft_balance() callback\n\n4. In the callback, use env::promise_result(0)\n   to read the response\n\nKey points:\n- Each cross-contract call uses a Promise\n- Callbacks are marked with #[private]\n- Gas must be split between the call and callback\n- Max 300 TGas total per transaction'
+      },
+
+      "batch-actions": {
+        title: "Batch Transaction",
+        lang: "JavaScript",
+        code: 'import {\n  connect, keyStores, utils, transactions\n} from "near-api-js";\n\nasync function batchTransaction(signerId) {\n  const keyStore = new keyStores.UnencryptedFileSystemKeyStore(\n    "~/.near-credentials"\n  );\n\n  const config = {\n    networkId: "mainnet",\n    keyStore,\n    nodeUrl: "https://rpc.mainnet.near.org",\n  };\n\n  const near = await connect(config);\n  const account = await near.account(signerId);\n\n  // Batch multiple actions in one transaction\n  // All actions must target the same receiver\n  const result = await account.signAndSendTransaction({\n    receiverId: "wrap.near",\n    actions: [\n      // Action 1: Storage deposit for receiver\n      transactions.functionCall(\n        "storage_deposit",\n        { account_id: "receiver.near" },\n        "30000000000000",        // 30 TGas\n        "1250000000000000000000" // 0.00125 NEAR\n      ),\n\n      // Action 2: Transfer tokens\n      transactions.functionCall(\n        "ft_transfer",\n        {\n          receiver_id: "receiver.near",\n          amount: "1000000000000000000000000",\n          memo: "Batch transfer",\n        },\n        "100000000000000", // 100 TGas\n        "1"                // 1 yoctoNEAR\n      ),\n    ],\n  });\n\n  console.log("Batch TX Hash:", result.transaction.hash);\n  console.log("Actions:", result.transaction.actions.length);\n\n  // Check each action outcome\n  result.receipts_outcome.forEach(function(outcome, i) {\n    console.log(\n      "Action", i, "status:",\n      JSON.stringify(outcome.outcome.status)\n    );\n  });\n\n  return result;\n}\n\n// Common batch patterns:\n// 1. storage_deposit + ft_transfer\n// 2. Deploy contract + initialize\n// 3. Create sub-account + transfer + deploy\n//\n// Note: all actions in a batch must target\n// the same receiver contract\n\nbatchTransaction("sender.near");',
+        outputLabel: "Response",
+        outputType: "success",
+        outputValue: 'Batch TX Hash: 3kLm9p...wXy\nActions executed: 2\n\nAction 0 status: {"SuccessValue": "..."}\nAction 1 status: {"SuccessValue": ""}\n\nNote: All actions in a batch are atomic.\nIf any action fails, all actions are reverted.\nAll actions must target the same receiver.'
+      },
+
+      "storage-deposit": {
+        title: "Storage Deposit",
+        lang: "JavaScript",
+        code: 'import { connect, keyStores, utils } from "near-api-js";\n\n// NEP-145 Storage Management Standard\n// Most FT and NFT contracts require storage\n// registration before an account can hold tokens.\n\nasync function storageDeposit(\n  signerId, tokenContract, registrantId\n) {\n  const keyStore = new keyStores.UnencryptedFileSystemKeyStore(\n    "~/.near-credentials"\n  );\n\n  const config = {\n    networkId: "mainnet",\n    keyStore,\n    nodeUrl: "https://rpc.mainnet.near.org",\n  };\n\n  const near = await connect(config);\n  const account = await near.account(signerId);\n\n  // Step 1: Check if already registered\n  try {\n    const balance = await account.viewFunction({\n      contractId: tokenContract,\n      methodName: "storage_balance_of",\n      args: { account_id: registrantId },\n    });\n\n    if (balance && balance.total !== "0") {\n      console.log("Already registered!");\n      console.log("Total:", balance.total);\n      console.log("Available:", balance.available);\n      return balance;\n    }\n  } catch (e) {\n    console.log("Not registered, depositing...");\n  }\n\n  // Step 2: Check minimum storage cost\n  const bounds = await account.viewFunction({\n    contractId: tokenContract,\n    methodName: "storage_balance_bounds",\n    args: {},\n  });\n\n  console.log("Min deposit:", bounds.min);\n  console.log("Max deposit:", bounds.max);\n\n  // Step 3: Register with minimum deposit\n  const result = await account.functionCall({\n    contractId: tokenContract,\n    methodName: "storage_deposit",\n    args: {\n      account_id: registrantId,\n      registration_only: true,\n    },\n    gas: "30000000000000", // 30 TGas\n    attachedDeposit: bounds.min,\n  });\n\n  console.log("Registration TX:", result.transaction.hash);\n  console.log(registrantId, "registered on", tokenContract);\n\n  return result;\n}\n\n// Register on a token contract\nstorageDeposit(\n  "sender.near", "wrap.near", "new-user.near"\n);\n\n// Common storage deposit amounts:\n// wrap.near:      0.00125 NEAR\n// ref-finance:    0.1 NEAR\n// Most FTs:       0.00125 NEAR',
+        outputLabel: "Response",
+        outputType: "success",
+        outputValue: 'Min deposit: "1250000000000000000000"\nMax deposit: "1250000000000000000000"\n\nRegistration TX: 5mNo2q...rSt\nnew-user.near registered on wrap.near\n\nStorage balance:\n{\n  "total": "1250000000000000000000",\n  "available": "0"\n}\n\nTip: registration_only: true uses the minimum\ndeposit. Any excess NEAR is refunded.'
+      },
+
+      "access-keys": {
+        title: "Access Key Management",
+        lang: "JavaScript",
+        code: 'import {\n  connect, keyStores, utils, KeyPair, providers\n} from "near-api-js";\n\n// NEAR access key types:\n// 1. FullAccess - deploy, transfer, delete\n// 2. FunctionCall - limited to specific methods\n\nconst provider = new providers.JsonRpcProvider({\n  url: "https://rpc.mainnet.near.org",\n});\n\nasync function listAccessKeys(accountId) {\n  const result = await provider.query({\n    request_type: "view_access_key_list",\n    finality: "final",\n    account_id: accountId,\n  });\n\n  console.log("Access keys for:", accountId);\n  console.log("Total keys:", result.keys.length);\n\n  result.keys.forEach(function(key, i) {\n    console.log("\\nKey " + (i + 1) + ":");\n    console.log("  Public Key:", key.public_key);\n    console.log("  Nonce:", key.access_key.nonce);\n\n    if (key.access_key.permission === "FullAccess") {\n      console.log("  Permission: FullAccess");\n    } else {\n      var perm = key.access_key.permission.FunctionCall;\n      console.log("  Permission: FunctionCall");\n      console.log("  Receiver:", perm.receiver_id);\n      console.log("  Methods:",\n        perm.method_names.join(", ") || "(any)");\n      console.log("  Allowance:", perm.allowance);\n    }\n  });\n\n  return result.keys;\n}\n\nasync function addFunctionCallKey(\n  signerId, contractId, methods\n) {\n  const keyStore = new keyStores.UnencryptedFileSystemKeyStore(\n    "~/.near-credentials"\n  );\n\n  const config = {\n    networkId: "mainnet",\n    keyStore,\n    nodeUrl: "https://rpc.mainnet.near.org",\n  };\n\n  const near = await connect(config);\n  const account = await near.account(signerId);\n\n  // Generate a new key pair\n  const newKeyPair = KeyPair.fromRandom("ed25519");\n  console.log("New public key:",\n    newKeyPair.getPublicKey().toString());\n\n  // Add as function-call limited access key\n  const result = await account.addKey(\n    newKeyPair.getPublicKey(),\n    contractId,\n    methods,\n    utils.format.parseNearAmount("0.25") // allowance\n  );\n\n  console.log("Added function-call key");\n  console.log("TX:", result.transaction.hash);\n  console.log("Allowed contract:", contractId);\n  console.log("Allowed methods:", methods.join(", "));\n  console.log("Allowance: 0.25 NEAR");\n\n  // Save the key\n  await keyStore.setKey("mainnet", signerId, newKeyPair);\n\n  return { keyPair: newKeyPair, result };\n}\n\n// List all access keys\nlistAccessKeys("example.near");\n\n// Add a limited access key\naddFunctionCallKey("example.near", "wrap.near", [\n  "ft_transfer",\n  "storage_deposit",\n]);',
+        outputLabel: "Response",
+        outputType: "success",
+        outputValue: 'Access keys for: example.near\nTotal keys: 3\n\nKey 1:\n  Public Key: ed25519:6E8sCci...\n  Nonce: 72541\n  Permission: FullAccess\n\nKey 2:\n  Public Key: ed25519:3kYz7w...\n  Nonce: 15\n  Permission: FunctionCall\n  Receiver: wrap.near\n  Methods: ft_transfer, storage_deposit\n  Allowance: 250000000000000000000000\n\nKey 3:\n  Public Key: ed25519:9aBcD3...\n  Nonce: 4\n  Permission: FunctionCall\n  Receiver: v2.ref-finance.near\n  Methods: (any)\n  Allowance: 250000000000000000000000'
+      }
+    };
+
+    // ──────────────────────────────────────────────
+    // DOM references
+    // ──────────────────────────────────────────────
+    var editorEl = document.getElementById("code-editor");
+    var lineNumbersEl = document.getElementById("line-numbers");
+    var outputArea = document.getElementById("output-area");
+    var exampleSelect = document.getElementById("example-select");
+    var langBadge = document.getElementById("lang-badge");
+    var copyBtn = document.getElementById("copy-btn");
+    var outputBtn = document.getElementById("output-btn");
+    var tabOutputBtn = document.getElementById("tab-output-btn");
+    var tabReferenceBtn = document.getElementById("tab-reference-btn");
+
+    // ──────────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────────
+    function escapeHtml(text) {
+      var div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function clearElement(el) {
+      while (el.firstChild) {
+        el.removeChild(el.firstChild);
+      }
+    }
+
+    function createResultBlock(label, type, value) {
+      var block = document.createElement("div");
+      block.className = "result-block";
+
+      var labelEl = document.createElement("div");
+      labelEl.className = "result-label";
+      labelEl.textContent = label;
+      block.appendChild(labelEl);
+
+      var valueEl = document.createElement("div");
+      valueEl.className = "result-value " + type;
+      valueEl.textContent = value;
+      block.appendChild(valueEl);
+
+      return block;
+    }
+
+    function createEmptyState(message) {
+      var container = document.createElement("div");
+      container.className = "empty-state";
+
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "currentColor");
+      svg.setAttribute("stroke-width", "1.5");
+      var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M13 2L3 14h9l-1 8 10-12h-9l1-8z");
+      svg.appendChild(path);
+      container.appendChild(svg);
+
+      var p = document.createElement("p");
+      p.textContent = message;
+      container.appendChild(p);
+
+      return container;
+    }
+
+    // ──────────────────────────────────────────────
+    // Line numbers
+    // ──────────────────────────────────────────────
+    function updateLineNumbers() {
+      var lines = editorEl.value.split("\n").length;
+      var nums = "";
+      for (var i = 1; i <= lines; i++) {
+        nums += i + "\n";
+      }
+      lineNumbersEl.textContent = nums;
+    }
+
+    editorEl.addEventListener("input", updateLineNumbers);
+    editorEl.addEventListener("scroll", function () {
+      lineNumbersEl.style.transform =
+        "translateY(-" + editorEl.scrollTop + "px)";
+    });
+
+    // Tab key support
+    editorEl.addEventListener("keydown", function (e) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        var start = this.selectionStart;
+        var end = this.selectionEnd;
+        this.value = this.value.substring(0, start) +
+          "  " + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 2;
+        updateLineNumbers();
+      }
+    });
+
+    // ──────────────────────────────────────────────
+    // Load example
+    // ──────────────────────────────────────────────
+    function loadExample(id) {
+      var example = examples[id];
+      if (!example) return;
+      editorEl.value = example.code;
+      langBadge.textContent = example.lang;
+      updateLineNumbers();
+
+      clearElement(outputArea);
+      outputArea.appendChild(
+        createEmptyState(
+          "Click Show Output to see the expected response for " +
+          example.title + "."
+        )
+      );
+    }
+
+    exampleSelect.addEventListener("change", function () {
+      loadExample(this.value);
+    });
+
+    // ──────────────────────────────────────────────
+    // Show output
+    // ──────────────────────────────────────────────
+    outputBtn.addEventListener("click", function () {
+      var id = exampleSelect.value;
+      var example = examples[id];
+      if (!example) return;
+
+      switchTab("output");
+
+      clearElement(outputArea);
+      outputArea.appendChild(
+        createResultBlock(example.outputLabel, example.outputType, example.outputValue)
+      );
+      outputArea.appendChild(
+        createResultBlock(
+          "How to use",
+          "info",
+          "Example: " + example.title + "\n" +
+          "Copy this code into your project and modify as needed.\n\n" +
+          "Install dependencies:\n  npm install near-api-js"
+        )
+      );
+    });
+
+    // ──────────────────────────────────────────────
+    // Copy code
+    // ──────────────────────────────────────────────
+    copyBtn.addEventListener("click", function () {
+      editorEl.select();
+      navigator.clipboard.writeText(editorEl.value).then(function () {
+        var original = copyBtn.textContent;
+        copyBtn.textContent = "Copied!";
+        setTimeout(function () {
+          copyBtn.textContent = original;
+        }, 1500);
+      });
+    });
+
+    // ──────────────────────────────────────────────
+    // Tab switching
+    // ──────────────────────────────────────────────
+    function switchTab(tabName) {
+      var tabs = document.querySelectorAll(".output-tab");
+      for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].dataset.tab === tabName) {
+          tabs[i].classList.add("active");
+        } else {
+          tabs[i].classList.remove("active");
+        }
+      }
+      var views = document.querySelectorAll(".output-view");
+      for (var j = 0; j < views.length; j++) {
+        if (views[j].id === "view-" + tabName) {
+          views[j].classList.add("active");
+        } else {
+          views[j].classList.remove("active");
+        }
+      }
+    }
+
+    tabOutputBtn.addEventListener("click", function () {
+      switchTab("output");
+    });
+
+    tabReferenceBtn.addEventListener("click", function () {
+      switchTab("reference");
+    });
+
+    // ──────────────────────────────────────────────
+    // Init
+    // ──────────────────────────────────────────────
+    loadExample("account-lookup");
+  </script>
+</body>
+</html>

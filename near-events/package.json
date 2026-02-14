@@ -1,0 +1,32 @@
+{
+  "name": "@near-js/events",
+  "version": "1.0.0",
+  "description": "Contract event listener for NEAR Protocol - NEP-297 standard event parsing and real-time monitoring",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "keywords": [
+    "near",
+    "near-protocol",
+    "events",
+    "nep-297",
+    "blockchain",
+    "smart-contracts",
+    "listener"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/near/near-events"
+  }
+}

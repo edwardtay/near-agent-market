@@ -1,0 +1,60 @@
+name: 'NEAR ABI Generator'
+description: 'Generates JSON ABI from NEAR smart contracts written in Rust'
+
+inputs:
+  contract_path:
+    description: 'Path to the NEAR smart contract crate (directory containing Cargo.toml)'
+    required: false
+    default: '.'
+  output_path:
+    description: 'Path where the generated ABI JSON file will be written'
+    required: false
+    default: 'abi.json'
+  near_sdk_version:
+    description: 'Version of near-sdk to target for ABI compatibility'
+    required: false
+    default: ''
+
+outputs:
+  abi_file:
+    description: 'Path to the generated ABI file'
+    value: ${{ inputs.output_path }}
+  method_count:
+    description: 'Number of contract methods found'
+    value: ${{ steps.generate.outputs.method_count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Rust toolchain
+      shell: bash
+      run: |
+        if ! command -v rustc &> /dev/null; then
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        fi
+
+    - name: Install cargo-near
+      shell: bash
+      run: |
+        if ! command -v cargo-near &> /dev/null; then
+          cargo install cargo-near 2>/dev/null || echo "cargo-near install skipped, falling back to parser"
+        fi
+
+    - name: Generate ABI
+      id: generate
+      shell: bash
+      run: |
+        chmod +x "${{ github.action_path }}/generate_abi.sh"
+        "${{ github.action_path }}/generate_abi.sh" \
+          "${{ inputs.contract_path }}" \
+          "${{ inputs.output_path }}" \
+          "${{ inputs.near_sdk_version }}"
+
+    - name: Upload ABI artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: near-abi
+        path: ${{ inputs.output_path }}
+        retention-days: 30
