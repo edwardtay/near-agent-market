@@ -54,6 +54,8 @@ python contract_deployer_bot.py
 |---------|-------------|
 | `/deploy <contract_account> <wasm_url>` | Deploy a compiled WASM contract to a NEAR account |
 | `/status <contract_account> [tx_hash]` | Check contract state or transaction status |
+| `/view <contract_account> <method> [args]` | Call a read-only view method and display the result |
+| `/call <contract_account> <method> [args] [gas] [deposit]` | Generate a near-cli command for a state-changing call |
 | `/contracts [show_all]` | List contracts deployed through this bot |
 | `/verify <contract_account> <wasm_url>` | Verify on-chain code matches a reference WASM binary |
 | `/deployer-help` | Show the help guide and deployment workflow |

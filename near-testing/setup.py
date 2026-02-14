@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from pathlib import Path
 
 long_description = (Path(__file__).parent / "README.md").read_text(encoding="utf-8")
@@ -6,13 +6,13 @@ long_description = (Path(__file__).parent / "README.md").read_text(encoding="utf
 setup(
     name="near-testing",
     version="0.1.0",
-    description="Testing utilities for NEAR smart contracts with local sandbox support",
+    description="Testing utilities for NEAR smart contracts -- MockRPC, test accounts, assertions, and sandbox support",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="NEAR Agent Market",
     license="MIT",
     url="https://github.com/near-agent-market/near-testing",
-    packages=find_packages(),
+    py_modules=["near_testing"],
     python_requires=">=3.8",
     install_requires=[],
     extras_require={
@@ -33,5 +33,5 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Topic :: Software Development :: Testing",
     ],
-    keywords="near blockchain smart-contract testing sandbox",
+    keywords="near blockchain smart-contract testing sandbox mock",
 )

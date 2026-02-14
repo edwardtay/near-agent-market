@@ -39,7 +39,14 @@ python dao_helper_bot.py
 
 ## Commands
 
-### `/proposals`
+### `/dao-info`
+Show DAO statistics: treasury balance, council members, proposal count, bond requirements, voting period.
+
+| Parameter | Required | Description |
+|---|---|---|
+| `dao` | No | DAO contract address |
+
+### `/dao-proposals`
 List proposals from a DAO. Filters by status (active, approved, rejected, expired).
 
 | Parameter | Default | Description |
@@ -48,15 +55,7 @@ List proposals from a DAO. Filters by status (active, approved, rejected, expire
 | `status` | active | Filter: all, active, approved, rejected, expired |
 | `limit` | 5 | Number of proposals (max 10) |
 
-### `/proposal-detail`
-View a single proposal with full vote breakdown.
-
-| Parameter | Required | Description |
-|---|---|---|
-| `proposal_id` | Yes | Proposal ID number |
-| `dao` | No | DAO contract address |
-
-### `/vote`
+### `/dao-vote`
 Generate a near-cli command to vote on a proposal. Shows current vote tally and proposal status.
 
 | Parameter | Required | Description |
@@ -65,7 +64,7 @@ Generate a near-cli command to vote on a proposal. Shows current vote tally and 
 | `action` | No | approve, reject, or remove (default: approve) |
 | `dao` | No | DAO contract address |
 
-### `/propose`
+### `/dao-create-proposal`
 Generate a near-cli command to create a new proposal.
 
 | Parameter | Required | Description |
@@ -77,18 +76,19 @@ Generate a near-cli command to create a new proposal.
 | `member` | For member changes | Account ID to add or remove |
 | `dao` | No | DAO contract address |
 
-### `/dao-info`
-Show DAO statistics: treasury balance, council members, proposal count, bond requirements, voting period.
+### `/dao-members`
+List all DAO roles and their members.
 
 | Parameter | Required | Description |
 |---|---|---|
 | `dao` | No | DAO contract address |
 
-### `/members`
-List all DAO roles and their members.
+### `/proposal-detail`
+View a single proposal with full vote breakdown.
 
 | Parameter | Required | Description |
 |---|---|---|
+| `proposal_id` | Yes | Proposal ID number |
 | `dao` | No | DAO contract address |
 
 ### `/treasury`

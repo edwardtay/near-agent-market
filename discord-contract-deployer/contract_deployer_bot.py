@@ -373,6 +373,16 @@ def help_embed() -> discord.Embed:
         inline=False,
     )
     embed.add_field(
+        name="/view",
+        value="Call a read-only view method on a contract and display the result.",
+        inline=False,
+    )
+    embed.add_field(
+        name="/call",
+        value="Generate a near-cli command for a state-changing contract method call.",
+        inline=False,
+    )
+    embed.add_field(
         name="/contracts",
         value="List all contracts deployed through this bot.",
         inline=False,
@@ -688,6 +698,178 @@ async def verify_command(
             text="The on-chain code does not match the provided WASM. "
                  "This could indicate a different build or version."
         )
+
+    await interaction.followup.send(embed=embed)
+
+
+@bot.tree.command(name="view", description="Call a read-only view method on a NEAR contract")
+@app_commands.describe(
+    contract_account="NEAR account ID of the contract",
+    method="View method name to call",
+    args="JSON arguments (default: {})",
+)
+async def view_command(
+    interaction: discord.Interaction,
+    contract_account: str,
+    method: str,
+    args: str = "{}",
+):
+    await interaction.response.defer()
+
+    # Parse JSON args
+    try:
+        parsed_args = json.loads(args)
+    except json.JSONDecodeError:
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="Invalid JSON",
+                description="The `args` parameter must be valid JSON (e.g. `{\"account_id\": \"alice.near\"}`).",
+                color=discord.Color.red(),
+            )
+        )
+        return
+
+    # Encode args as base64
+    args_b64 = base64.b64encode(json.dumps(parsed_args).encode()).decode()
+
+    result = await rpc_call("query", {
+        "request_type": "call_function",
+        "finality": "final",
+        "account_id": contract_account,
+        "method_name": method,
+        "args_base64": args_b64,
+    })
+
+    if "error" in result:
+        err_msg = result["error"].get("message", "Unknown error")
+        if isinstance(err_msg, dict):
+            err_msg = json.dumps(err_msg, indent=2)[:1000]
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="View call failed",
+                description=f"```\n{str(err_msg)[:1000]}\n```",
+                color=discord.Color.red(),
+            )
+        )
+        return
+
+    # Decode the result bytes
+    result_data = result.get("result", {})
+    raw_result = result_data.get("result", [])
+    if isinstance(raw_result, list):
+        try:
+            decoded = bytes(raw_result).decode("utf-8")
+            try:
+                parsed = json.loads(decoded)
+                display = json.dumps(parsed, indent=2)
+            except json.JSONDecodeError:
+                display = decoded
+        except (UnicodeDecodeError, ValueError):
+            display = str(raw_result)
+    else:
+        display = str(raw_result)
+
+    # Truncate long output
+    if len(display) > 3800:
+        display = display[:3800] + "\n... (truncated)"
+
+    embed = discord.Embed(
+        title=f"View: {contract_account}.{method}()",
+        color=discord.Color.green(),
+    )
+    embed.add_field(name="Contract", value=f"`{contract_account}`", inline=True)
+    embed.add_field(name="Method", value=f"`{method}`", inline=True)
+    embed.add_field(name="Network", value=NEAR_NETWORK, inline=True)
+    if parsed_args:
+        args_display = json.dumps(parsed_args, indent=2)
+        if len(args_display) > 500:
+            args_display = args_display[:500] + "..."
+        embed.add_field(name="Arguments", value=f"```json\n{args_display}\n```", inline=False)
+    embed.add_field(name="Result", value=f"```json\n{display}\n```", inline=False)
+
+    logs = result_data.get("logs", [])
+    if logs:
+        log_text = "\n".join(logs[:10])
+        embed.add_field(name="Logs", value=f"```\n{log_text[:500]}\n```", inline=False)
+
+    embed.set_footer(text=f"Network: {NEAR_NETWORK}")
+    await interaction.followup.send(embed=embed)
+
+
+@bot.tree.command(name="call", description="Generate a near-cli command for a contract method call")
+@app_commands.describe(
+    contract_account="NEAR account ID of the contract",
+    method="Method name to call",
+    args="JSON arguments (default: {})",
+    gas="Gas in TGas (default: 30)",
+    deposit="Deposit in NEAR (default: 0)",
+)
+async def call_command(
+    interaction: discord.Interaction,
+    contract_account: str,
+    method: str,
+    args: str = "{}",
+    gas: int = 30,
+    deposit: float = 0.0,
+):
+    await interaction.response.defer()
+
+    # Parse JSON args
+    try:
+        parsed_args = json.loads(args)
+    except json.JSONDecodeError:
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="Invalid JSON",
+                description="The `args` parameter must be valid JSON (e.g. `{\"key\": \"value\"}`).",
+                color=discord.Color.red(),
+            )
+        )
+        return
+
+    signer = NEAR_ACCOUNT_ID or "<your-account.near>"
+    gas_yocto = str(gas * 10**12)
+
+    if deposit > 0:
+        deposit_str = str(deposit)
+        cli_cmd = (
+            f"near call {contract_account} {method} "
+            f"'{json.dumps(parsed_args)}' "
+            f"--accountId {signer} --gas {gas_yocto} --deposit {deposit_str}"
+        )
+    else:
+        cli_cmd = (
+            f"near call {contract_account} {method} "
+            f"'{json.dumps(parsed_args)}' "
+            f"--accountId {signer} --gas {gas_yocto}"
+        )
+
+    embed = discord.Embed(
+        title=f"Call: {contract_account}.{method}()",
+        description="This is a state-changing transaction. Run the command below with near-cli to execute it.",
+        color=discord.Color.orange(),
+    )
+    embed.add_field(name="Contract", value=f"`{contract_account}`", inline=True)
+    embed.add_field(name="Method", value=f"`{method}`", inline=True)
+    embed.add_field(name="Network", value=NEAR_NETWORK, inline=True)
+    embed.add_field(name="Gas", value=f"{gas} TGas", inline=True)
+    if deposit > 0:
+        embed.add_field(name="Deposit", value=f"{deposit} NEAR", inline=True)
+
+    if parsed_args:
+        args_display = json.dumps(parsed_args, indent=2)
+        if len(args_display) > 500:
+            args_display = args_display[:500] + "..."
+        embed.add_field(name="Arguments", value=f"```json\n{args_display}\n```", inline=False)
+
+    embed.add_field(
+        name="Execute via near-cli",
+        value=f"```bash\n{cli_cmd}\n```",
+        inline=False,
+    )
+    embed.set_footer(
+        text=f"Network: {NEAR_NETWORK} | Run this command in your terminal with near-cli installed."
+    )
 
     await interaction.followup.send(embed=embed)
 

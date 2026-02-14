@@ -554,7 +554,7 @@ async def fetch_treasury(dao_id: str) -> dict:
 
 # ─── Slash Commands ───────────────────────────────────────────────
 
-@bot.tree.command(name="proposals", description="List active DAO proposals")
+@bot.tree.command(name="dao-proposals", description="List active DAO proposals")
 @app_commands.describe(
     dao="DAO contract address (e.g. marketing-dao.sputnik-dao.near)",
     status="Filter by status",
@@ -577,7 +577,7 @@ async def proposals_command(
     dao_id = resolve_dao(dao)
     if not dao_id:
         await interaction.response.send_message(
-            "Specify a DAO: `/proposals dao:marketing-dao.sputnik-dao.near`\n"
+            "Specify a DAO: `/dao-proposals dao:marketing-dao.sputnik-dao.near`\n"
             "Or set `DEFAULT_DAO_ID` in the bot's environment.",
             ephemeral=True,
         )
@@ -605,7 +605,7 @@ async def proposals_command(
     await interaction.followup.send(header, embeds=embeds[:10])
 
 
-@bot.tree.command(name="vote", description="Vote on a DAO proposal (generates near-cli command)")
+@bot.tree.command(name="dao-vote", description="Vote on a DAO proposal (generates near-cli command)")
 @app_commands.describe(
     proposal_id="Proposal ID number",
     action="Vote action",
@@ -621,7 +621,7 @@ async def vote_command(
     dao_id = resolve_dao(dao)
     if not dao_id:
         await interaction.response.send_message(
-            "Specify a DAO: `/vote proposal_id:42 action:approve dao:marketing-dao.sputnik-dao.near`",
+            "Specify a DAO: `/dao-vote proposal_id:42 action:approve dao:marketing-dao.sputnik-dao.near`",
             ephemeral=True,
         )
         return
@@ -691,7 +691,7 @@ async def vote_command(
     await interaction.followup.send(embed=embed)
 
 
-@bot.tree.command(name="propose", description="Create a new DAO proposal (generates near-cli command)")
+@bot.tree.command(name="dao-create-proposal", description="Create a new DAO proposal (generates near-cli command)")
 @app_commands.describe(
     kind="Proposal type",
     description="Proposal description",
@@ -713,7 +713,7 @@ async def propose_command(
     dao_id = resolve_dao(dao)
     if not dao_id:
         await interaction.response.send_message(
-            "Specify a DAO: `/propose kind:transfer description:\"Fund project\" dao:marketing-dao.sputnik-dao.near`",
+            "Specify a DAO: `/dao-create-proposal kind:transfer description:\"Fund project\" dao:marketing-dao.sputnik-dao.near`",
             ephemeral=True,
         )
         return
@@ -851,7 +851,7 @@ async def dao_info_command(
     await interaction.followup.send(embed=embed)
 
 
-@bot.tree.command(name="members", description="List DAO council members")
+@bot.tree.command(name="dao-members", description="List DAO council members")
 @app_commands.describe(dao="DAO contract address")
 @app_commands.autocomplete(dao=dao_autocomplete)
 async def members_command(
@@ -861,7 +861,7 @@ async def members_command(
     dao_id = resolve_dao(dao)
     if not dao_id:
         await interaction.response.send_message(
-            "Specify a DAO: `/members dao:marketing-dao.sputnik-dao.near`",
+            "Specify a DAO: `/dao-members dao:marketing-dao.sputnik-dao.near`",
             ephemeral=True,
         )
         return
